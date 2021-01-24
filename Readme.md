@@ -5,7 +5,8 @@ Pre-requisites:
 
 Steps:
 1. Create a sqlite3 db on your local host machine with name cricinfo_raw.db and create a table called raw.
-2. Then simply run the below docker run command with
+
+2. Then simply run the below docker run command where;
 
     a. -v : Abs path of the sqlite3 db on local host.
 
@@ -25,4 +26,5 @@ Steps:
                 --finish 22
     
     e. You can run the container as below to get help on arguments.
+    
         docker run --rm -it rakeshbhat9/cricket_commentary_scraper:latest --help
