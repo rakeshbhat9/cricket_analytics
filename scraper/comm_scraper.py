@@ -59,8 +59,8 @@ def transform_data(data):
     df['over'] = df['over'].apply(lambda x: x.split(".")[0])
     df['over'] = df['over'].astype('int')
 
-    df['bowler'] = df['shortComm'].apply(lambda x: x.split("to")[0])
-    df['batsman'] = df['shortComm'].apply(lambda x: x.split("to")[-1].split(",")[0])
+    df['bowler'] = df['shortComm'].apply(lambda x: x.split("to")[0].strip())
+    df['batsman'] = df['shortComm'].apply(lambda x: x.split("to")[-1].split(",")[0].strip())
 
     df['runScored'] = df['shortComm'].apply(lambda x: x.split(",")[-1].replace("run","").replace("no",'0').strip())
     
