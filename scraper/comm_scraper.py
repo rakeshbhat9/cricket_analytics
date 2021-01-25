@@ -1,17 +1,20 @@
+# Std Lib
 import requests
 import logging
 import sqlite3 as sql
 from datetime import datetime
 import time
 
-
+# 3rd Party Lib
 from bs4 import BeautifulSoup
 import pandas as pd
 import click
 
+#Config
+log_file = f"/logs/cric_etl_{datetime.today().strftime('%Y%m%d')}.log"
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(message)s',
-                    handlers=[logging.StreamHandler()])
+                    handlers=[logging.StreamHandler(),logging.FileHandler(log_file)])
 
 # --------------------------------------------------------------------------------------------
 
@@ -64,7 +67,16 @@ def transform_data(data):
 
     df['runScored'] = df['shortComm'].apply(lambda x: x.split(",")[-1].replace("run","").replace("no",'0').strip())
     
+    max_over = df['over'].max()
+    logging.info(f"Latest over recieved is {max_over}")
+
+    latest_over_balls = df[df['over'] == max_over].shape[0]
+    if latest_over_balls != 6:
+        df = df[df['over'] != df['over'].max()]
+        logging.info(f"Dropping data from over {max_over}, as over is not complete")
+    
     logging.info("Data transformed")
+
     return df
 
 # --------------------------------------------------------------------------------------------
@@ -72,37 +84,31 @@ def transform_data(data):
 
 def save_data(df):
 
-    filtered_df = check_last_update(df)
-
-    if filtered_df.empty:
+    if df.empty:
         logging.info("No data to update")
         return
+    
+    with sql.connect('/database/cricinfo_raw.db')  as conn:
+        list_of_tables = pd.read_sql('''SELECT name from sqlite_master where type= "table"''',conn)['name'].unique().tolist()
+    
+    # ToDo: Create a unique table name per match and remove 'raw'
 
-    conn = sql.connect('cricinfo_raw.db')
-    filtered_df.to_sql('raw',conn,if_exists='append',index=False)
-    logging.info(f"Saved data as of {filtered_df['over'].max} over")
-
+        if 'raw' not in list_of_tables:
+            logging.info("Table doesn't exist hence creating a new one")
+            df.to_sql('raw',conn,if_exists='append',index=False)
+            logging.info(f"Saved data as of {df['over'].max()} over")
+    
+        else:
+            latest_over = pd.read_sql('''SELECT max(over) as last_over FROM raw ''',conn)['last_over'].values[0]
+            logging.info(f"Latest over saved in DB is {latest_over}")
+            df = df[(df['over']>latest_over)]
+            if df.empty:
+                logging.info("No additional data to update")
+            else:
+                df.to_sql('raw',conn,if_exists='append',index=False)
+                logging.info(f"Saved data as of {df['over'].max()} over")
+    
     return
-
-# --------------------------------------------------------------------------------------------
-
-def check_last_update(df):
-
-    max_over = df['over'].max()
-    logging.info(f"Latest over recieved is {max_over}")
-
-    latest_over_balls = df[df['over'] == max_over].shape[0]
-    if latest_over_balls != 6:
-        df = df[df['over'] != df['over'].max()]
-        logging.info(f"Dropping data from over {max_over} as over is not complete")
-
-    conn = sql.connect('cricinfo_raw.db') 
-    latest_over = pd.read_sql('''SELECT max(over) as last_over FROM raw ''',conn)['last_over'].values[0]
-    logging.info(f"Latest over saved in DB is {latest_over}")
-    df = df[(df['over']>latest_over)]
-
-    return df
-
 # --------------------------------------------------------------------------------------------
 
 def time_check(start,finish):

@@ -1,30 +1,23 @@
-Script scrapes ball by ball commentary from CricInfo for any given match.
+The repo currently has two folders:
+1. Scraper - This will scrape ball by ball commentary for any given cric-info live commentary link and store the data in Sqlite3 database.
+2. Streamlt - Then connects to the database created above to analyse the data.
 
 Pre-requisites:
-1. Docker installed on the machine.
+1. Docker CE / Compose installed on the server or host machine.
 
-Steps:
-1. Create a sqlite3 db on your local host machine with name cricinfo_raw.db and create a table called raw.
+Usage:
+1. Clone the repo
+2. Update below in the /scraper/Dockerfile
+    --url : commentary page link from cricinfo - Default = None
+    --start: Hour in 24 hour format  - Default = 4
+    --finish: Hour in 24 hour format - Default = 14
+3. In docker-compose.yaml
+    Update volume information -v, we will need database path to be same for both services and an additional mount for scraper logs folder.
+4. run docker-compose up in the directory; first time around docker will build the images from then on it should be quick turnaround.
 
-2. Then simply run the below docker run command where;
-
-    a. -v : Abs path of the sqlite3 db on local host.
-
-    Flags below are python script specific managed by click and not docker run command flags.
-
-    b. --url : commentary page link from cricinfo
-
-    The container will run perpetually hence by passing below hour flags we can get control when the script actually sources the data.
-
-    c. --start: Hour in 24 hour format
-    d. --finish: Hour in 24 hour format
-
-        docker run --rm -it \
-                -v /home/rakeshbhat9/repos/databases/cricinfo_raw.db:/cricinfo_raw.db rakeshbhat9/cricket_commentary_scraper:latest \
-                --url 'https://www.espncricinfo.com/series/england-in-sri-lanka-2020-21-1242951/sri-lanka-vs-england-2nd-test-1243016/live-cricket-score' \
-                --start 20 \
-                --finish 22
-    
-    e. You can run the container as below to get help on arguments.
-    
-        docker run --rm -it rakeshbhat9/cricket_commentary_scraper:latest --help
+ToDo:
+Scraper:
+    Add innings to the extract
+    Configure table name based on match selected
+Streamlit:
+    Build dashboard to batsmen & bowler head to head.
