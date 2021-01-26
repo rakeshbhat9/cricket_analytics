@@ -65,13 +65,13 @@ def transform_data(data):
     df['bowler'] = df['shortComm'].apply(lambda x: x.split("to")[0].strip())
     df['batsman'] = df['shortComm'].apply(lambda x: x.split("to")[-1].split(",")[0].strip())
 
-    df['runScored'] = df['shortComm'].apply(lambda x: x.split(",")[-1].replace("run","").replace("no",'0').strip())
+    df['runScored'] = df['shortComm'].apply(lambda x: x.split(",")[-1].split(" ")[1].replace("no","0").replace("FOUR","4").strip())
     
     max_over = df['over'].max()
     logging.info(f"Latest over recieved is {max_over}")
 
     latest_over_balls = df[df['over'] == max_over].shape[0]
-    if latest_over_balls != 6:
+    if latest_over_balls >= 6:
         df = df[df['over'] != df['over'].max()]
         logging.info(f"Dropping data from over {max_over}, as over is not complete")
     
