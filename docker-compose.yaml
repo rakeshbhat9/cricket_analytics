@@ -1,5 +1,5 @@
 
-version : '3.9'
+version : '3.3'
 
 services :
   scraper :
@@ -7,8 +7,8 @@ services :
       context:  ./scraper
       dockerfile: Dockerfile
     volumes:
-      - /home/rakeshbhat9/dockertesting/logs:/logs
-      - /home/rakeshbhat9/dockertesting/database:/database
+      - /home/rakesh/documents/data/logs:/logs
+      - /home/rakesh/documents/data/database:/database
   
   streamlit:
     build :
@@ -17,4 +17,4 @@ services :
     ports:
       - 8501:8501
     volumes:
-      - /home/rakeshbhat9/dockertesting/database:/database
+      - /home/rakesh/documents/data/database:/database
